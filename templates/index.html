@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html dir="rtl" lang="ar">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Daleel.AI | المحامي الذكي</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+  <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;700&family=Noto+Kufi+Arabic:wght@300;400;600&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+</head>
+<body>
+  
+  <div class="main-wrapper">
+    <header>
+      <div class="logo-area">
+        <span class="icon">⚖️</span>
+        <h1>Daleel.AI</h1>
+      </div>
+    </header>
+
+    <div class="chat-container">
+      <div id="chat-box">
+        <div class="bot-msg intro-msg">
+          <div class="msg-content">
+            <h3>مرحباً بك في Daleel.AI 👋</h3>
+            <p>أنا مساعدك القانوني الذكي. أنا هنا لأجيب على استفساراتك بناءً على القوانين الأردنية الموثقة.</p>
+            <p style="font-size: 0.9rem; opacity: 0.8;">جرب أن تسأل: "ما هي عقوبة التزوير؟" أو "هل يجوز للمؤجر رفع الإيجار؟"</p>
+          </div>
+        </div>
+      </div>
+
+      <div id="loading-indicator" class="hidden">
+        <div class="typing-dots">
+          <span></span><span></span><span></span>
+        </div>
+        <span class="loading-text">جاري البحث في المصادر القانونية...</span>
+      </div>
+
+      <div class="input-area">
+        <div class="input-wrapper">
+            <input type="text" id="user-input" placeholder="اكتب استشارتك القانونية هنا..." autocomplete="off" />
+            <button onclick="sendMessage()" id="send-btn">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M22 2L11 13" stroke="black" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                <path d="M22 2L15 22L11 13L2 9L22 2Z" stroke="black" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+            </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const inputField = document.getElementById("user-input");
+    
+    inputField.addEventListener("keypress", function(event) {
+      if (event.key === "Enter") sendMessage();
+    });
+
+    async function sendMessage() {
+      const message = inputField.value.trim();
+      if (!message) return;
+
+      const chatBox = document.getElementById("chat-box");
+      const loadingDiv = document.getElementById("loading-indicator");
+      
+      // 1. User Message (Plain text is fine)
+      chatBox.innerHTML += `
+        <div class="user-msg">
+          <div class="msg-content">${message}</div>
+        </div>`;
+      
+      inputField.value = "";
+      chatBox.scrollTop = chatBox.scrollHeight;
+      loadingDiv.classList.remove("hidden");
+
+      try {
+        const response = await fetch("/ask", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ message }),
+        });
+
+        const data = await response.json();
+        loadingDiv.classList.add("hidden");
+
+        const replyRaw = data.reply || "حدث خطأ.";
+        
+        // 2. PARSE MARKDOWN (This fixes the clutter!)
+        // It converts **bold** to <b> and - list to <li>
+        const replyFormatted = marked.parse(replyRaw);
+
+        let sourcesHtml = "";
+        if (data.sources && data.sources.length > 0) {
+            sourcesHtml = `<div class="sources-badge">📚 المصادر: ${data.sources.join(", ")}</div>`;
+        }
+
+        // 3. Bot Message
+        chatBox.innerHTML += `
+          <div class="bot-msg">
+            <div class="msg-content">
+              ${replyFormatted}
+              ${sourcesHtml}
+            </div>
+          </div>`;
+          
+      } catch (error) {
+        loadingDiv.classList.add("hidden");
+        console.error(error);
+      }
+
+      chatBox.scrollTop = chatBox.scrollHeight;
+    }
+  </script>
+</body>
+</html>
+

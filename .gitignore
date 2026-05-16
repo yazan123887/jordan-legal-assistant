@@ -1,0 +1,25 @@
+# Virtual Environment
+venv/
+.venv/
+
+# Environment Configurations & API Keys
+.env
+
+# Local Editor Settings
+.vscode/
+
+# Python Cache
+__pycache__/
+*.pyc
+
+# Data Pipelines & Vector Databases (Keep Local)
+data/chroma_db/
+data/faiss_index/
+data/chunks/
+data/clean/
+data/embeddings/
+data/raw/
+data/laws/
+
+# Ignore large binary artifacts
+artifacts/
