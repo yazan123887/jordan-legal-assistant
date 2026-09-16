@@ -1,5 +1,4 @@
 # -*- coding: utf-8 -*-
-# --- PUT THIS AT THE VERY TOP OF APP.PY ---
 import os
 import re
 import uuid
